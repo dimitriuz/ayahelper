@@ -268,6 +268,11 @@ fn run_gui() -> Result<()> {
 }
 
 fn main() -> Result<()> {
+    // Rust ignores SIGPIPE, which turns `ayahelper --status | head` into a
+    // panic on a broken pipe rather than a quiet exit. Put the default back:
+    // this is a command-line tool and being piped into `head` is normal.
+    // SAFETY: setting a signal disposition to SIG_DFL before any threads start.
+    unsafe { libc::signal(libc::SIGPIPE, libc::SIG_DFL) };
     let args: Vec<String> = std::env::args().skip(1).collect();
     match args.first().map(String::as_str) {
         None => tray::run_daemon(false),
