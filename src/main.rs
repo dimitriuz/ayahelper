@@ -243,7 +243,7 @@ fn run_gui() -> Result<()> {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([820.0, 620.0])
             .with_min_inner_size([620.0, 460.0])
-            .with_title("AYANEO")
+            .with_title("ayaHelper")
             .with_visible(true),
         ..Default::default()
     };

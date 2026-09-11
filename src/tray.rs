@@ -34,7 +34,7 @@ impl ksni::Tray for Tray {
         "ayahelper".into()
     }
     fn title(&self) -> String {
-        "AYANEO".into()
+        "ayaHelper".into()
     }
     fn icon_name(&self) -> String {
         "input-gaming".into()

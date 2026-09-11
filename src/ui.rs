@@ -1031,7 +1031,7 @@ impl App {
         );
         hint(
             ui,
-            "\"Open AYANEO\" and \"On-screen KB\" are handed to the desktop over \
+            "\"Open app\" and \"On-screen KB\" are handed to the desktop over \
              DBus rather than pressed as keys; this app answers the first one. \
              Applied to the running profile and re-applied when one is loaded.",
         );

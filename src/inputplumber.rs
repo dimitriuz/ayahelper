@@ -274,7 +274,7 @@ pub struct Action {
 pub const ACTIONS: [Action; 6] = [
     Action { id: "none", label: "Nothing", yaml: "" },
     Action { id: "esc", label: "Escape", yaml: "  - keyboard: KeyEsc" },
-    Action { id: "app", label: "Open AYANEO", yaml: "  - dbus: ui_quick" },
+    Action { id: "app", label: "Open app", yaml: "  - dbus: ui_quick" },
     Action { id: "osk", label: "On-screen KB", yaml: "  - dbus: ui_osk" },
     Action {
         id: "guide",

@@ -14,8 +14,22 @@ need root, and a tray icon. No daemon of its own, no vendor driver, no Electron.
 
 ---
 
+## Screenshots
+
+| | |
+|---|---|
+| **Controller** — deadzone, per-stick sensitivity, rumble, triggers, gyro, turbo | **Fan** — a curve you drag, with the live temperature on it |
+| ![Controller](docs/screenshots/controller.png) | ![Fan](docs/screenshots/fan.png) |
+| **Power** — TDP, and a warning when something else is overwriting it | **Input** — bind the handheld's extra buttons |
+| ![Power](docs/screenshots/power.png) | ![Input](docs/screenshots/input.png) |
+| **Lighting** — ring colour and effects | **Sensors** — temperatures, APU power, battery |
+| ![Lighting](docs/screenshots/lighting.png) | ![Sensors](docs/screenshots/sensors.png) |
+
+---
+
 ## Contents
 
+- [Screenshots](#screenshots)
 - [What it does](#what-it-does)
 - [Tested hardware](#tested-hardware)
 - [Requirements](#requirements)
