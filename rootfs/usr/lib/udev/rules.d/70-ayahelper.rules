@@ -28,3 +28,9 @@ SUBSYSTEM=="hidraw", ATTRS{modalias}=="usb:v1C4Fp007C*in01", \
 # "change") re-applies it too.
 ACTION!="remove", SUBSYSTEM=="leds", KERNEL=="ayaneo:*", \
   RUN+="/bin/sh -c 'chgrp video /sys%p/brightness /sys%p/multi_intensity 2>/dev/null; chmod g+w /sys%p/brightness /sys%p/multi_intensity 2>/dev/null'"
+
+# Turn the rings off while the machine sleeps. The driver's default is "oem",
+# which hands the LEDs back to the EC on suspend - and the EC lights them, so
+# a sleeping handheld sits there glowing. "off" makes the driver dark them
+# instead. The attribute resets to oem at every boot, hence the rule.
+ACTION!="remove", SUBSYSTEM=="leds", KERNEL=="ayaneo:*", ATTR{suspend_mode}="off"
