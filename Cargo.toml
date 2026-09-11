@@ -1,8 +1,9 @@
 [package]
-name = "ayaneo-tray"
+name = "ayahelper"
 version = "0.1.0"
 edition = "2021"
 description = "Tray utility for AYANEO handhelds on Linux - an AYASpace replacement"
+repository = "https://github.com/dimitriuz/ayahelper"
 license = "GPL-2.0-or-later"
 
 [dependencies]

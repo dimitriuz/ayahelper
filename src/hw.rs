@@ -45,7 +45,7 @@ impl Devices {
                     "no legacy UART found (expected /dev/ttyS* at I/O 0x3E8)".into()
                 } else if openable.is_empty() {
                     format!(
-                        "cannot open {} - install 70-ayaneo-tray.rules, then \
+                        "cannot open {} - install 70-ayahelper.rules, then \
                          `sudo udevadm control --reload && sudo udevadm trigger`",
                         cands
                             .iter()

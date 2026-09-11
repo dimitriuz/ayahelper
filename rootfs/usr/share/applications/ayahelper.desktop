@@ -1,11 +1,11 @@
 [Desktop Entry]
 Type=Application
-Name=AYANEO
+Name=ayaHelper
 GenericName=Handheld control
 Comment=Controller, lighting, fan and power settings for AYANEO handhelds
-Exec=ayaneo-tray --window
+Exec=ayahelper --window
 Icon=input-gaming
 Terminal=false
-Categories=System;Settings;HardwareSettings;
+Categories=Utility;Settings;HardwareSettings;
 Keywords=gamepad;controller;fan;rgb;tdp;handheld;
 StartupNotify=false

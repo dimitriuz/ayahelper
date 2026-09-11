@@ -142,7 +142,7 @@ fn claim() -> Option<std::fs::File> {
         .create(true)
         .write(true)
         .truncate(false)
-        .open(PathBuf::from(dir).join("ayaneo-tray-rings.lock"))
+        .open(PathBuf::from(dir).join("ayahelper-rings.lock"))
         .ok()?;
     // SAFETY: a valid fd this function owns, and LOCK_NB so it cannot block.
     let held = unsafe { libc::flock(f.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } == 0;

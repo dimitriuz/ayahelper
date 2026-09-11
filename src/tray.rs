@@ -23,7 +23,7 @@ fn open_window() {
     if crate::ipc::send_to_gui("show").is_ok() {
         return;
     }
-    let exe = std::env::current_exe().unwrap_or_else(|_| "ayaneo-tray".into());
+    let exe = std::env::current_exe().unwrap_or_else(|_| "ayahelper".into());
     let _ = Command::new(exe).arg("--window").spawn();
 }
 
@@ -31,7 +31,7 @@ pub struct Tray;
 
 impl ksni::Tray for Tray {
     fn id(&self) -> String {
-        "ayaneo-tray".into()
+        "ayahelper".into()
     }
     fn title(&self) -> String {
         "AYANEO".into()

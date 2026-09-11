@@ -1,12 +1,12 @@
 [Unit]
-Description=AYANEO tray privileged helper (fan, SMU power limits, charge limit, platform profile)
+Description=ayaHelper privileged service (fan, SMU power limits, charge limit, platform profile)
 Documentation=https://github.com/dimitriuz/ayaneo-slide-fixes
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/ayaneo-tray --helper
+ExecStart=/usr/bin/ayahelper --privileged
 Group=wheel
-RuntimeDirectory=ayaneo-tray
+RuntimeDirectory=ayahelper
 RuntimeDirectoryMode=0750
 # The charge limit is kept here so it survives a reboot and applies before
 # anyone logs in. ProtectSystem=strict would otherwise make /var/lib read-only.
@@ -18,7 +18,7 @@ ReadWritePaths=/sys/firmware/acpi/platform_profile
 # Fan control is raw port I/O through /dev/port.
 DeviceAllow=/dev/port rw
 # Whatever happens to the process, the fan goes back to the EC's own curve.
-ExecStopPost=/usr/bin/ayaneo-tray --fan-auto
+ExecStopPost=/usr/bin/ayahelper --fan-auto
 NoNewPrivileges=no
 RestrictAddressFamilies=AF_UNIX
 MemoryDenyWriteExecute=yes

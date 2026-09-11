@@ -1,11 +1,11 @@
 [Unit]
-Description=AYANEO tray applet
+Description=ayaHelper tray applet
 After=graphical-session.target
 PartOf=graphical-session.target
 
 [Service]
 # No --window: start in the tray and wait to be asked for.
-ExecStart=/usr/bin/ayaneo-tray
+ExecStart=/usr/bin/ayahelper
 Restart=on-failure
 RestartSec=2
 

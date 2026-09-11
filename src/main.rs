@@ -1,4 +1,4 @@
-//! ayaneo-tray - a tray utility for AYANEO handhelds on Linux.
+//! ayaHelper - a tray utility for AYANEO handhelds on Linux.
 //!
 //! Replaces the parts of AYASpace that matter, without a driver or a daemon:
 //! the gamepad MCU over its UART, the keyboard backlight over a HID feature
@@ -28,17 +28,17 @@ mod ui;
 use anyhow::Result;
 
 const USAGE: &str = "\
-ayaneo-tray - AYANEO handheld control
+ayahelper - AYANEO handheld control
 
-    ayaneo-tray              run the tray icon (default; the window is a
+    ayahelper              run the tray icon (default; the window is a
                              separate process, started when you click it)
-    ayaneo-tray --window     open the settings window
-    ayaneo-tray --status     print device and settings state, change nothing
-    ayaneo-tray --restore    re-apply saved settings and exit (for a login unit)
-    ayaneo-tray --map B A    bind handheld button B to action A (no args: list them)
-    ayaneo-tray --helper     run the privileged helper (systemd service)
-    ayaneo-tray --fan-auto   hand the fan back to the EC and exit (failsafe)
-    ayaneo-tray --help
+    ayahelper --window     open the settings window
+    ayahelper --status     print device and settings state, change nothing
+    ayahelper --restore    re-apply saved settings and exit (for a login unit)
+    ayahelper --map B A    bind handheld button B to action A (no args: list them)
+    ayahelper --privileged run the privileged part (systemd service)
+    ayahelper --fan-auto   hand the fan back to the EC and exit (failsafe)
+    ayahelper --help
 ";
 
 fn print_status() {
@@ -248,7 +248,7 @@ fn run_gui() -> Result<()> {
         ..Default::default()
     };
     eframe::run_native(
-        "ayaneo-tray",
+        "ayahelper",
         opts,
         Box::new(move |cc| {
             // Probe once here rather than per-frame: it walks every serial port.
@@ -300,7 +300,7 @@ fn main() -> Result<()> {
                 Ok(())
             }
             _ => {
-                println!("usage: ayaneo-tray --map <button> <action>");
+                println!("usage: ayahelper --map <button> <action>");
                 println!(
                     "  buttons: {}",
                     inputplumber::SOURCES
@@ -320,7 +320,7 @@ fn main() -> Result<()> {
                 Ok(())
             }
         },
-        Some("--helper") => helper::run(),
+        Some("--privileged") => helper::run(),
         // Used by the helper unit's ExecStopPost, so an unclean exit still
         // leaves the fan under the EC's own control.
         Some("--fan-auto") => {

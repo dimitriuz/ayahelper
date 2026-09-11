@@ -1,4 +1,4 @@
-# ayaneo-tray - grant the active session user access to the two devices the
+# ayahelper - grant the active session user access to the two devices the
 # GUI drives directly, so it never needs root, a setuid helper, or polkit.
 
 # The gamepad MCU: an on-board 16550 UART at I/O 0x3E8 (COM3). Matched by

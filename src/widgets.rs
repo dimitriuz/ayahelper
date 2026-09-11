@@ -150,7 +150,7 @@ pub fn unavailable(ui: &mut Ui, what: &str, err: &Option<String>) {
     }
     hint(
         ui,
-        "Install 70-ayaneo-tray.rules, then: sudo udevadm control --reload && sudo udevadm trigger",
+        "Install 70-ayahelper.rules, then: sudo udevadm control --reload && sudo udevadm trigger",
     );
 }
 

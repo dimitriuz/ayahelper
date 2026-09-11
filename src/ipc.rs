@@ -13,7 +13,7 @@ use crate::tray::TrayMsg;
 
 fn socket_path() -> PathBuf {
     let dir = std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| "/tmp".into());
-    PathBuf::from(dir).join("ayaneo-tray-gui.sock")
+    PathBuf::from(dir).join("ayahelper-gui.sock")
 }
 
 /// Send a command to a running window. Err means there is no window.

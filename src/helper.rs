@@ -19,7 +19,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::Path;
 
-pub const SOCKET: &str = "/run/ayaneo-tray/helper.sock";
+pub const SOCKET: &str = "/run/ayahelper/privileged.sock";
 /// Sanity bounds for a 15-54W class handheld APU. A typo should not be able to
 /// ask the SMU for 400 W.
 const TDP_MIN_W: u32 = 4;
@@ -270,7 +270,7 @@ pub fn run() -> Result<()> {
     for sig in [libc::SIGINT, libc::SIGTERM] {
         unsafe { libc::signal(sig, handle_signal as *const () as libc::sighandler_t) };
     }
-    eprintln!("ayaneo-tray helper listening on {SOCKET}");
+    eprintln!("ayaHelper privileged service listening on {SOCKET}");
     for stream in listener.incoming() {
         match stream {
             Ok(s) => {
@@ -286,7 +286,7 @@ pub fn run() -> Result<()> {
 /// shows the privileged controls as unavailable.
 pub fn request(cmd: &str) -> Result<String> {
     let mut s = UnixStream::connect(SOCKET)
-        .with_context(|| format!("{SOCKET} not available (is ayaneo-tray-helper running?)"))?;
+        .with_context(|| format!("{SOCKET} not available (is ayahelper-privileged running?)"))?;
     s.set_read_timeout(Some(std::time::Duration::from_secs(5)))?;
     s.write_all(format!("{cmd}\n").as_bytes())?;
     let mut line = String::new();

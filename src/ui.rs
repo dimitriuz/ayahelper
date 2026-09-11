@@ -127,7 +127,7 @@ impl App {
         Self {
             // Debug hook, same spirit as the close selftest: open straight onto a
             // page so it can be checked without someone clicking through.
-            tab: match std::env::var("AYANEO_TRAY_TAB").unwrap_or_default().as_str() {
+            tab: match std::env::var("AYAHELPER_TAB").unwrap_or_default().as_str() {
                 s if s.starts_with("lighting") => Tab::Lighting,
                 s if s.starts_with("power") => Tab::Power,
                 s if s.starts_with("fan") => Tab::Fan,
@@ -138,7 +138,7 @@ impl App {
             },
             sub: {
                 let mut v = [0usize; 7];
-                if let Some((_, n)) = std::env::var("AYANEO_TRAY_TAB")
+                if let Some((_, n)) = std::env::var("AYAHELPER_TAB")
                     .unwrap_or_default()
                     .split_once(':')
                 {
@@ -173,14 +173,14 @@ impl App {
             fan_mode: 0,
             fan_note: String::new(),
             curve_dirty: None,
-            // same debug spirit as AYANEO_TRAY_TAB: lets the expanded editor be
+            // same debug spirit as AYAHELPER_TAB: lets the expanded editor be
             // opened and checked without clicking into it
-            kbd_custom: std::env::var("AYANEO_TRAY_CUSTOM").is_ok(),
-            rings_custom: std::env::var("AYANEO_TRAY_CUSTOM").is_ok(),
+            kbd_custom: std::env::var("AYAHELPER_CUSTOM").is_ok(),
+            rings_custom: std::env::var("AYAHELPER_CUSTOM").is_ok(),
             style_applied: false,
             worker: None,
             last_reprobe: Instant::now(),
-            selftest_close_at: std::env::var("AYANEO_TRAY_SELFTEST_CLOSE")
+            selftest_close_at: std::env::var("AYAHELPER_SELFTEST_CLOSE")
                 .ok()
                 .and_then(|v| v.parse::<u64>().ok())
                 .map(|secs| Instant::now() + Duration::from_secs(secs)),
@@ -479,7 +479,7 @@ impl App {
     fn power_tab(&mut self, ui: &mut egui::Ui, sub: usize) {
         if sub > 0 && !self.helper_up {
             unavailable(ui, "Helper not running", &None);
-            hint(ui, "sudo systemctl enable --now ayaneo-tray-helper");
+            hint(ui, "sudo systemctl enable --now ayahelper-privileged");
             if wide_button(ui, "Re-check").clicked() {
                 self.submit(Job::PollHelper);
             }
@@ -595,7 +595,7 @@ impl App {
     fn fan_tab(&mut self, ui: &mut egui::Ui) {
         if !self.helper_up {
             unavailable(ui, "Helper not running", &None);
-            hint(ui, "sudo systemctl enable --now ayaneo-tray-helper");
+            hint(ui, "sudo systemctl enable --now ayahelper-privileged");
             if wide_button(ui, "Re-check").clicked() {
                 self.submit(Job::PollHelper);
             }
@@ -1065,7 +1065,7 @@ impl App {
     fn about_tab(&mut self, ui: &mut egui::Ui, sub: usize) {
         match sub {
             0 => {
-                ui.label(egui::RichText::new("ayaneo-tray").size(22.0).strong());
+                ui.label(egui::RichText::new("ayahelper").size(22.0).strong());
                 hint(ui, &format!("version {}", env!("CARGO_PKG_VERSION")));
                 ui.add_space(10.0);
                 ui.label("The parts of AYASpace that matter, without a driver or a daemon.");
@@ -1289,10 +1289,10 @@ impl eframe::App for App {
                 );
             // Debug hook: jump to the end, so "is the bottom reachable" can be
             // answered with a screenshot instead of an assumption.
-            if std::env::var("AYANEO_TRAY_SCROLL_BOTTOM").is_ok() {
+            if std::env::var("AYAHELPER_SCROLL_BOTTOM").is_ok() {
                 area = area.stick_to_bottom(true);
             }
-            let dbg = std::env::var("AYANEO_TRAY_SCROLL_BOTTOM").is_ok();
+            let dbg = std::env::var("AYAHELPER_SCROLL_BOTTOM").is_ok();
             let avail_h = ui.available_height();
             let out = area.show(ui, |ui| {
                 // Cap the content at the viewport width so one over-wide child

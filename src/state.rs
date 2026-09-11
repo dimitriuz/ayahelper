@@ -102,19 +102,32 @@ pub fn path() -> PathBuf {
     // Per-user, since the GUI runs unprivileged. XDG config, not /var/lib.
     dirs::config_dir()
         .unwrap_or_else(|| PathBuf::from("."))
-        .join("ayaneo-tray/settings.json")
+        .join("ayahelper/settings.json")
 }
 
 /// Returns the settings and whether they describe the real hardware state.
 ///
 /// `false` means we are guessing (first run, nothing to import), and callers
 /// must not write the gamepad record on the strength of it.
+/// Where this app's settings lived before it was renamed from ayaneo-tray.
+///
+/// Read once, if the current file does not exist, so a rename does not silently
+/// reset somebody's controller to factory defaults. The next save writes the new
+/// path and the old file is then ignored.
+fn legacy_path() -> PathBuf {
+    dirs::config_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join("ayaneo-tray/settings.json")
+}
+
 pub fn load() -> (Settings, bool) {
-    if let Some(s) = std::fs::read_to_string(path())
-        .ok()
-        .and_then(|s| serde_json::from_str::<Settings>(&s).ok())
-    {
-        return (s, true);
+    for p in [path(), legacy_path()] {
+        if let Some(s) = std::fs::read_to_string(&p)
+            .ok()
+            .and_then(|s| serde_json::from_str::<Settings>(&s).ok())
+        {
+            return (s, true);
+        }
     }
     // Carry over from the CLI tools in this repo, so the two agree rather than
     // fighting: gulikit-ctl's record and ayaneo-kbdlight's cache.
