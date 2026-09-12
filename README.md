@@ -114,6 +114,21 @@ InputPlumber ships a config for this device. The pieces worth knowing:
 
 ## Install
 
+### From a release
+
+[Releases](https://github.com/dimitriuz/ayahelper/releases) carry a tarball with
+the binary, the `rootfs/` it needs and an installer:
+
+```bash
+tar -xzf ayahelper-<version>-x86_64-linux.tar.gz
+cd ayahelper-<version>-x86_64-linux
+./install.sh
+```
+
+The binary is built on Ubuntu, so it wants that glibc or newer — fine for the
+rolling distributions these handhelds run, but building from source avoids the
+question entirely and is equally supported.
+
 ### Build
 
 ```bash
