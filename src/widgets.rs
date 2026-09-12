@@ -104,7 +104,10 @@ pub fn swatch(ui: &mut Ui, rgb: u32, selected: bool) -> Response {
     let size = Vec2::splat(TOUCH_H);
     let mut b = Button::new("").fill(c).min_size(size);
     if selected {
-        b = b.stroke(egui::Stroke::new(3.0_f32, ui.visuals().selection.stroke.color));
+        b = b.stroke(egui::Stroke::new(
+            3.0_f32,
+            ui.visuals().selection.stroke.color,
+        ));
     }
     ui.add_sized(size, b)
 }
