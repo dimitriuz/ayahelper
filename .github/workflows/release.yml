@@ -1,0 +1,101 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (must already exist)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgl1-mesa-dev libxkbcommon-dev libwayland-dev \
+            libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev \
+            libxkbcommon-x11-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      # The tag and Cargo.toml must agree, or the About tab and the release
+      # page would claim different versions.
+      - name: Check the tag matches Cargo.toml
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          CARGO_VERSION="v$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)"
+          echo "tag=$TAG cargo=$CARGO_VERSION"
+          [ "$TAG" = "$CARGO_VERSION" ] || {
+            echo "::error::tag $TAG does not match Cargo.toml version $CARGO_VERSION"
+            exit 1
+          }
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Package
+        id: package
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          DIR="ayahelper-${TAG#v}-x86_64-linux"
+          mkdir -p "$DIR"
+          cp target/release/ayahelper "$DIR/"
+          cp -r rootfs "$DIR/"
+          cp README.md CHANGELOG.md install.sh "$DIR/"
+          tar -czf "$DIR.tar.gz" "$DIR"
+          sha256sum "$DIR.tar.gz" > "$DIR.tar.gz.sha256"
+          echo "dir=$DIR" >> "$GITHUB_OUTPUT"
+
+      - name: Release notes
+        id: notes
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          # The changelog section for this version, between its heading and the next.
+          awk -v tag="${TAG#v}" '
+            $0 ~ "^## \\[" tag "\\]" { inside = 1; next }
+            inside && /^## \[/ { exit }
+            inside { print }
+          ' CHANGELOG.md > notes.md
+          {
+            echo
+            echo "---"
+            echo
+            echo '**Tested on one machine only** - an AYANEO SLIDE (`AS01`). It writes to the'
+            echo 'embedded controller and to SMU power limits; read the Safety section of the'
+            echo 'README before installing. No warranty of any kind.'
+            echo
+            echo '### Install'
+            echo
+            echo '```bash'
+            echo "tar -xzf ${{ steps.package.outputs.dir }}.tar.gz"
+            echo "cd ${{ steps.package.outputs.dir }}"
+            echo './install.sh'
+            echo '```'
+            echo
+            echo 'The binary is built on Ubuntu, so it needs that glibc or newer. Building from'
+            echo 'source (`cargo build --release`) is equally supported and avoids the question.'
+          } >> notes.md
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          gh release create "$TAG" \
+            --title "ayaHelper $TAG" \
+            --notes-file notes.md \
+            "${{ steps.package.outputs.dir }}.tar.gz" \
+            "${{ steps.package.outputs.dir }}.tar.gz.sha256"
