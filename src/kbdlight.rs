@@ -31,7 +31,13 @@ pub struct KbdLight {
 
 impl Default for KbdLight {
     fn default() -> Self {
-        Self { color: 0x002FFF, mode: 1, enable: true, fn_ison: false, brightness: 100 }
+        Self {
+            color: 0x002FFF,
+            mode: 1,
+            enable: true,
+            fn_ison: false,
+            brightness: 100,
+        }
     }
 }
 
@@ -87,7 +93,11 @@ pub fn apply(dev: &std::path::Path, st: &KbdLight) -> Result<()> {
     let mut buf = st.report();
     let rc = unsafe { libc::ioctl(f.as_raw_fd(), hidiocsfeature(LEN), buf.as_mut_ptr()) };
     if rc < 0 {
-        bail!("HIDIOCSFEATURE on {}: {}", dev.display(), std::io::Error::last_os_error());
+        bail!(
+            "HIDIOCSFEATURE on {}: {}",
+            dev.display(),
+            std::io::Error::last_os_error()
+        );
     }
     Ok(())
 }

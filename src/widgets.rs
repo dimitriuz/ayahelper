@@ -28,9 +28,13 @@ pub fn row<R>(ui: &mut Ui, label: &str, add: impl FnOnce(&mut Ui) -> R) -> R {
             egui::Label::new(RichText::new(label).strong()).halign(Align::LEFT),
         );
         let w = (avail - LABEL_W - 12.0).max(140.0);
-        ui.allocate_ui_with_layout(vec2(w, TOUCH_H), Layout::left_to_right(Align::Center), |ui| {
-            out = Some(add(ui));
-        });
+        ui.allocate_ui_with_layout(
+            vec2(w, TOUCH_H),
+            Layout::left_to_right(Align::Center),
+            |ui| {
+                out = Some(add(ui));
+            },
+        );
     });
     out.unwrap()
 }
@@ -56,11 +60,7 @@ pub fn slider<T: egui::emath::Numeric>(
 /// Used instead of radio buttons and dropdowns throughout: every option stays
 /// visible and every option is a large target, which matters more on a handheld
 /// than the space a dropdown would save.
-pub fn segmented<T: PartialEq + Copy>(
-    ui: &mut Ui,
-    current: T,
-    options: &[(T, &str)],
-) -> Option<T> {
+pub fn segmented<T: PartialEq + Copy>(ui: &mut Ui, current: T, options: &[(T, &str)]) -> Option<T> {
     let mut chosen = None;
     // wrapped, so a long set of options folds onto a second line instead of
     // running off the edge
@@ -109,13 +109,6 @@ pub fn swatch(ui: &mut Ui, rgb: u32, selected: bool) -> Response {
     ui.add_sized(size, b)
 }
 
-/// Section heading with breathing room above it.
-pub fn section(ui: &mut Ui, title: &str) {
-    ui.add_space(14.0);
-    ui.label(RichText::new(title).size(19.0).strong());
-    ui.add_space(2.0);
-}
-
 /// Small explanatory text under a control.
 pub fn hint(ui: &mut Ui, text: &str) {
     ui.add(egui::Label::new(RichText::new(text).size(12.5).weak()).wrap());
@@ -130,7 +123,9 @@ pub fn warn(ui: &mut Ui, text: &str) {
     ui.add_space(6.0);
     ui.add(
         egui::Label::new(
-            RichText::new(text).size(13.5).color(Color32::from_rgb(226, 150, 70)),
+            RichText::new(text)
+                .size(13.5)
+                .color(Color32::from_rgb(226, 150, 70)),
         )
         .wrap(),
     );
@@ -172,8 +167,7 @@ pub fn colour_editor(ui: &mut Ui, colour: &mut u32, presets: &[u32], open: &mut 
             }
         }
         let is_preset = presets.contains(colour);
-        let mut b = Button::new(RichText::new("Custom").size(15.0))
-            .min_size(vec2(96.0, TOUCH_H));
+        let mut b = Button::new(RichText::new("Custom").size(15.0)).min_size(vec2(96.0, TOUCH_H));
         if *open || !is_preset {
             b = b.fill(ui.visuals().selection.bg_fill);
         }
@@ -231,10 +225,7 @@ pub fn fan_curve(
     let h = 210.0;
     let w = ui.available_width().min(430.0);
     let (outer, _) = ui.allocate_exact_size(vec2(w, h + AXIS_H), egui::Sense::hover());
-    let rect = egui::Rect::from_min_max(
-        outer.min,
-        egui::pos2(outer.max.x, outer.max.y - AXIS_H),
-    );
+    let rect = egui::Rect::from_min_max(outer.min, egui::pos2(outer.max.x, outer.max.y - AXIS_H));
     let p = ui.painter_at(outer);
     let vis = ui.visuals();
 
@@ -338,8 +329,16 @@ pub fn fan_curve(
                         * (s_range.1 - s_range.0);
                 // keep points ordered and inside their neighbours, so the curve
                 // stays a function of temperature however it is dragged
-                let lo = if i == 0 { t_range.0 } else { points[i - 1].0 as f32 + 1.0 };
-                let hi = if i + 1 == n { t_range.1 } else { points[i + 1].0 as f32 - 1.0 };
+                let lo = if i == 0 {
+                    t_range.0
+                } else {
+                    points[i - 1].0 as f32 + 1.0
+                };
+                let hi = if i + 1 == n {
+                    t_range.1
+                } else {
+                    points[i + 1].0 as f32 - 1.0
+                };
                 points[i].0 = nt.clamp(lo, hi).round() as u8;
                 points[i].1 = ns.clamp(s_range.0, s_range.1).round() as u8;
                 changed = true;

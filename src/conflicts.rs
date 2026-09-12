@@ -72,17 +72,25 @@ static KNOWN: [(&[&str], Daemon); 2] = [
 /// own shell-outs.
 pub fn scan() -> Vec<&'static Daemon> {
     let me = std::process::id();
-    let Ok(dir) = fs::read_dir("/proc") else { return Vec::new() };
+    let Ok(dir) = fs::read_dir("/proc") else {
+        return Vec::new();
+    };
     let mut out: Vec<&'static Daemon> = Vec::new();
 
     for entry in dir.flatten() {
-        let Some(pid) = entry.file_name().to_str().and_then(|s| s.parse::<u32>().ok()) else {
+        let Some(pid) = entry
+            .file_name()
+            .to_str()
+            .and_then(|s| s.parse::<u32>().ok())
+        else {
             continue;
         };
         if pid == me {
             continue;
         }
-        let Ok(comm) = fs::read_to_string(entry.path().join("comm")) else { continue };
+        let Ok(comm) = fs::read_to_string(entry.path().join("comm")) else {
+            continue;
+        };
         let comm = comm.trim_end();
 
         for (names, daemon) in &KNOWN {

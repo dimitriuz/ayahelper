@@ -59,7 +59,11 @@ impl ksni::Tray for Tray {
                 data.extend_from_slice(&[a, v, v, v]); // ARGB32
             }
         }
-        vec![ksni::Icon { width: N, height: N, data }]
+        vec![ksni::Icon {
+            width: N,
+            height: N,
+            data,
+        }]
     }
     fn activate(&mut self, _x: i32, _y: i32) {
         open_window();

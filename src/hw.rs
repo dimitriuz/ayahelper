@@ -17,7 +17,11 @@ pub struct Devices {
 }
 
 fn writable(p: &std::path::Path) -> bool {
-    std::fs::OpenOptions::new().read(true).write(true).open(p).is_ok()
+    std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(p)
+        .is_ok()
 }
 
 impl Devices {
@@ -28,8 +32,11 @@ impl Devices {
     pub fn probe(rec: &gamepad::Record, trusted: bool) -> Self {
         let mut d = Devices::default();
 
-        let found =
-            if trusted { gamepad::confirm_port(rec) } else { gamepad::find_port_readonly() };
+        let found = if trusted {
+            gamepad::confirm_port(rec)
+        } else {
+            gamepad::find_port_readonly()
+        };
         match found {
             Some(p) => d.gamepad = Some(p),
             None => {
@@ -39,8 +46,7 @@ impl Devices {
                 // unopenable - but the unpopulated 8250 slots never open, so it
                 // always blamed udev, including when the controller was simply
                 // absent.
-                let openable: Vec<_> =
-                    cands.iter().filter(|p| gamepad::port_openable(p)).collect();
+                let openable: Vec<_> = cands.iter().filter(|p| gamepad::port_openable(p)).collect();
                 d.gamepad_err = Some(if cands.is_empty() {
                     "no legacy UART found (expected /dev/ttyS* at I/O 0x3E8)".into()
                 } else if openable.is_empty() {
@@ -79,16 +85,17 @@ impl Devices {
 
         match rings::find_device() {
             Some(p) => {
-                if std::fs::OpenOptions::new().write(true).open(p.join("brightness")).is_ok() {
+                if std::fs::OpenOptions::new()
+                    .write(true)
+                    .open(p.join("brightness"))
+                    .is_ok()
+                {
                     d.rings = Some(p);
                 } else {
-                    d.rings_err =
-                        Some(format!("{}/brightness is not writable", p.display()));
+                    d.rings_err = Some(format!("{}/brightness is not writable", p.display()));
                 }
             }
-            None => {
-                d.rings_err = Some("no joystick_rings LED (is ayaneo-platform loaded?)".into())
-            }
+            None => d.rings_err = Some("no joystick_rings LED (is ayaneo-platform loaded?)".into()),
         }
         d
     }
@@ -100,14 +107,22 @@ impl Devices {
         if let Some(p) = &self.gamepad {
             out.push((
                 "gamepad",
-                gamepad::send(p, &s.record()).map(|_| ()).map_err(|e| e.to_string()),
+                gamepad::send(p, &s.record())
+                    .map(|_| ())
+                    .map_err(|e| e.to_string()),
             ));
         }
         if let Some(p) = &self.kbd {
-            out.push(("keyboard", kbdlight::apply(p, &s.kbdlight).map_err(|e| e.to_string())));
+            out.push((
+                "keyboard",
+                kbdlight::apply(p, &s.kbdlight).map_err(|e| e.to_string()),
+            ));
         }
         if let Some(p) = &self.rings {
-            out.push(("rings", rings::apply(p, &s.rings).map_err(|e| e.to_string())));
+            out.push((
+                "rings",
+                rings::apply(p, &s.rings).map_err(|e| e.to_string()),
+            ));
         }
         out
     }

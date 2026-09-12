@@ -16,7 +16,9 @@ pub fn available() -> Vec<String> {
 }
 
 pub fn current() -> Option<String> {
-    std::fs::read_to_string(PATH).ok().map(|s| s.trim().to_string())
+    std::fs::read_to_string(PATH)
+        .ok()
+        .map(|s| s.trim().to_string())
 }
 
 /// True when the file is directly writable by us, i.e. no helper is needed.
@@ -26,5 +28,10 @@ pub fn writable_directly() -> bool {
 
 /// Handy presets for a 7840U-class handheld. The SMU accepts anything in the
 /// helper's range; these are just the rungs worth having one click away.
-pub const TDP_PRESETS: [(u32, &str); 5] =
-    [(8, "8 W quiet"), (12, "12 W"), (15, "15 W default"), (22, "22 W"), (28, "28 W max")];
+pub const TDP_PRESETS: [(u32, &str); 5] = [
+    (8, "8 W quiet"),
+    (12, "12 W"),
+    (15, "15 W default"),
+    (22, "22 W"),
+    (28, "28 W max"),
+];

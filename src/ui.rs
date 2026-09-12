@@ -12,8 +12,7 @@ use std::sync::mpsc::Receiver;
 use std::time::{Duration, Instant};
 
 use crate::widgets::{
-    colour_editor, fan_curve, hint, row, segmented, slider, toggle, unavailable, warn,
-    wide_button,
+    colour_editor, fan_curve, hint, row, segmented, slider, toggle, unavailable, warn, wide_button,
 };
 
 const SENS_LABELS: [&str; 3] = ["50", "100", "150"];
@@ -56,7 +55,15 @@ impl Tab {
         }
     }
     fn label(self) -> &'static str {
-        ["Controller", "Lighting", "Power", "Fan", "Sensors", "Input", "About"][self.index()]
+        [
+            "Controller",
+            "Lighting",
+            "Power",
+            "Fan",
+            "Sensors",
+            "Input",
+            "About",
+        ][self.index()]
     }
     /// Splitting each section into its own page is what keeps any one screen
     /// down to a few large controls, which is the whole point on a handheld.
@@ -167,7 +174,7 @@ impl App {
             last_tdp_poll: Instant::now() - Duration::from_secs(60),
             chg: crate::charge::Status::default(),
             last_chg_poll: Instant::now() - Duration::from_secs(60),
-            button_map: button_map,
+            button_map,
             profile: power::current(),
             helper_up: false,
             fan_mode: 0,
@@ -192,7 +199,11 @@ impl App {
     }
 
     fn curve_spec(points: &[(u8, u8)]) -> String {
-        points.iter().map(|(t, s)| format!("{t}:{s}")).collect::<Vec<_>>().join(",")
+        points
+            .iter()
+            .map(|(t, s)| format!("{t}:{s}"))
+            .collect::<Vec<_>>()
+            .join(",")
     }
 
     /// Queue device work. Never blocks the render thread.
@@ -303,8 +314,10 @@ impl App {
                     "Off gives full resolution near centre. Leave on if a stick does not \
                      return to the same place twice.",
                 );
-                let sens: Vec<(u8, &str)> =
-                    gamepad::SENS.iter().map(|(lvl, pct)| (*lvl, SENS_LABELS[(*pct / 50 - 1) as usize])).collect();
+                let sens: Vec<(u8, &str)> = gamepad::SENS
+                    .iter()
+                    .map(|(lvl, pct)| (*lvl, SENS_LABELS[(*pct / 50 - 1) as usize]))
+                    .collect();
                 for (left, label) in [(true, "Left"), (false, "Right")] {
                     row(ui, label, |ui| {
                         if let Some(v) = segmented(ui, rec.sens(left), &sens) {
@@ -355,7 +368,10 @@ impl App {
                         }
                     });
                 }
-                hint(ui, "Gyro levels. The SLIDE reports these but exposes no gyro UI in AYASpace.");
+                hint(
+                    ui,
+                    "Gyro levels. The SLIDE reports these but exposes no gyro UI in AYASpace.",
+                );
             }
             _ => {
                 for (i, name) in ["A", "B", "X", "Y", "R1", "R2"].iter().enumerate() {
@@ -409,7 +425,10 @@ impl App {
             });
             self.kbd_custom = open;
             if gradient {
-                hint(ui, "Gradient cycles through its own colours and ignores this.");
+                hint(
+                    ui,
+                    "Gradient cycles through its own colours and ignores this.",
+                );
             }
             row(ui, "Brightness", |ui| {
                 if slider(ui, &mut k.brightness, 0..=100, " %").changed() {
@@ -494,8 +513,11 @@ impl App {
                 let direct = power::writable_directly();
                 let can = direct || self.helper_up;
                 let self_profiles = self.profiles.clone();
-                let opts: Vec<(usize, &str)> =
-                    self_profiles.iter().enumerate().map(|(i, p)| (i, p.as_str())).collect();
+                let opts: Vec<(usize, &str)> = self_profiles
+                    .iter()
+                    .enumerate()
+                    .map(|(i, p)| (i, p.as_str()))
+                    .collect();
                 let cur = self_profiles
                     .iter()
                     .position(|p| Some(p.as_str()) == self.profile.as_deref())
@@ -521,12 +543,17 @@ impl App {
                     let _ = state::save(&self.settings);
                     self.status = format!("Profile: {p}");
                 }
-                hint(ui, "The ACPI platform profile. Coarse, but the kernel's own interface.");
+                hint(
+                    ui,
+                    "The ACPI platform profile. Coarse, but the kernel's own interface.",
+                );
             }
             2 => self.charge_page(ui),
             _ => {
-                let labels: Vec<String> =
-                    power::TDP_PRESETS.iter().map(|(w, _)| format!("{w} W")).collect();
+                let labels: Vec<String> = power::TDP_PRESETS
+                    .iter()
+                    .map(|(w, _)| format!("{w} W"))
+                    .collect();
                 let opts: Vec<(u32, &str)> = power::TDP_PRESETS
                     .iter()
                     .enumerate()
@@ -543,7 +570,10 @@ impl App {
                     // five seconds away.
                     self.last_tdp_poll = Instant::now() - Duration::from_secs(4);
                 }
-                hint(ui, "Sets STAPM and the fast/slow limits together, via ryzenadj.");
+                hint(
+                    ui,
+                    "Sets STAPM and the fast/slow limits together, via ryzenadj.",
+                );
 
                 // The buttons above say what was asked for. These say what the
                 // hardware is doing, which is a different thing on a machine
@@ -554,7 +584,10 @@ impl App {
                         row(ui, "In force", |ui| {
                             ui.label(egui::RichText::new(format!("{stapm} W")).size(19.0));
                         });
-                        hint(ui, &format!("Read from the SMU. Fast {fast} W, slow {slow} W."));
+                        hint(
+                            ui,
+                            &format!("Read from the SMU. Fast {fast} W, slow {slow} W."),
+                        );
                         if self.settings.tdp_watts.is_some_and(|w| w != stapm) {
                             warn(
                                 ui,
@@ -601,117 +634,120 @@ impl App {
             }
             return;
         }
-            let cur = self.fan_mode;
-            let picked = row(ui, "Control", |ui| {
-                segmented(
-                    ui,
-                    cur,
-                    &[(0u8, "Auto"), (1, "Manual"), (2, "Curve")],
-                )
+        let cur = self.fan_mode;
+        let picked = row(ui, "Control", |ui| {
+            segmented(ui, cur, &[(0u8, "Auto"), (1, "Manual"), (2, "Curve")])
+        });
+        if let Some(m) = picked {
+            self.fan_mode = m;
+            let req = match m {
+                1 => format!("fan manual {}", self.settings.fan_pct),
+                2 => format!("fan curve {}", Self::curve_spec(&self.settings.fan_curve)),
+                _ => "fan auto".to_string(),
+            };
+            self.submit(Job::Helper(req));
+            self.settings.fan_mode = Some(["auto", "manual", "curve"][m as usize].to_string());
+            let _ = state::save(&self.settings);
+            self.status = format!("Fan: {}…", ["automatic", "manual", "curve"][m as usize]);
+        }
+
+        if self.fan_mode == 1 {
+            let mut pct = self.settings.fan_pct;
+            let commit = row(ui, "Speed", |ui| {
+                let s = ui
+                    .add_enabled_ui(true, |ui| slider(ui, &mut pct, 20..=100, " %"))
+                    .inner;
+                s.drag_stopped() || s.lost_focus()
             });
-            if let Some(m) = picked {
-                self.fan_mode = m;
-                let req = match m {
-                    1 => format!("fan manual {}", self.settings.fan_pct),
-                    2 => format!("fan curve {}", Self::curve_spec(&self.settings.fan_curve)),
-                    _ => "fan auto".to_string(),
-                };
-                self.submit(Job::Helper(req));
-                self.settings.fan_mode =
-                    Some(["auto", "manual", "curve"][m as usize].to_string());
+            self.settings.fan_pct = pct;
+            if commit {
+                self.submit(Job::Helper(format!("fan manual {pct}")));
                 let _ = state::save(&self.settings);
-                self.status = format!("Fan: {}…", ["automatic", "manual", "curve"][m as usize]);
-            }
-
-            if self.fan_mode == 1 {
-                let mut pct = self.settings.fan_pct;
-                let commit = row(ui, "Speed", |ui| {
-                    let s = ui.add_enabled_ui(true, |ui| slider(ui, &mut pct, 20..=100, " %")).inner;
-                    s.drag_stopped() || s.lost_focus()
-                });
-                self.settings.fan_pct = pct;
-                if commit {
-                    self.submit(Job::Helper(format!("fan manual {pct}")));
-                    let _ = state::save(&self.settings);
-                    self.status = format!("Fan: manual {pct}%…");
-                }
-                hint(
-                    ui,
-                    "Speed is the PWM duty cycle — the share of time the fan is driven, \
-                     which is what the hardware actually takes. It is commanded, not \
-                     measured: this machine has no tachometer.",
-                );
-            } else if self.fan_mode == 2 {
-                let live = self.telemetry.temps.iter().find(|(n, _)| n == "CPU").map(|(_, v)| *v);
-                let mut pts = self.settings.fan_curve.clone();
-                let moved = fan_curve(ui, &mut pts, live, (40.0, 95.0), (20.0, 100.0));
-                if moved {
-                    self.settings.fan_curve = pts;
-                    self.curve_dirty = Some(Instant::now());
-                }
-                if let Some(t) = live {
-                    let target = crate::fan::curve_speed(&self.settings.fan_curve, t);
-                    row(ui, "Now", |ui| {
-                        ui.label(
-                            egui::RichText::new(format!("{t:.0} °C  ->  {target} %")).size(17.0),
-                        );
-                    });
-                }
-                if wide_button(ui, "Reset curve").clicked() {
-                    self.settings.fan_curve = crate::fan::default_curve();
-                    self.curve_dirty = Some(Instant::now());
-                }
-                hint(
-                    ui,
-                    "Drag a point to reshape the curve. The orange line is the current \
-                     CPU temperature. Speeds below 20% are refused, and the helper \
-                     applies the curve itself every two seconds — the EC has no curve \
-                     of its own.",
-                );
-            }
-
-            if !self.fan_note.is_empty() {
-                ui.label(
-                    egui::RichText::new(&self.fan_note)
-                        .color(egui::Color32::from_rgb(226, 150, 70)),
-                );
+                self.status = format!("Fan: manual {pct}%…");
             }
             hint(
                 ui,
-                "Above 90 °C the helper hands the fan back to the EC and latches until \
+                "Speed is the PWM duty cycle — the share of time the fan is driven, \
+                     which is what the hardware actually takes. It is commanded, not \
+                     measured: this machine has no tachometer.",
+            );
+        } else if self.fan_mode == 2 {
+            let live = self
+                .telemetry
+                .temps
+                .iter()
+                .find(|(n, _)| n == "CPU")
+                .map(|(_, v)| *v);
+            let mut pts = self.settings.fan_curve.clone();
+            let moved = fan_curve(ui, &mut pts, live, (40.0, 95.0), (20.0, 100.0));
+            if moved {
+                self.settings.fan_curve = pts;
+                self.curve_dirty = Some(Instant::now());
+            }
+            if let Some(t) = live {
+                let target = crate::fan::curve_speed(&self.settings.fan_curve, t);
+                row(ui, "Now", |ui| {
+                    ui.label(egui::RichText::new(format!("{t:.0} °C  ->  {target} %")).size(17.0));
+                });
+            }
+            if wide_button(ui, "Reset curve").clicked() {
+                self.settings.fan_curve = crate::fan::default_curve();
+                self.curve_dirty = Some(Instant::now());
+            }
+            hint(
+                ui,
+                "Drag a point to reshape the curve. The orange line is the current \
+                     CPU temperature. Speeds below 20% are refused, and the helper \
+                     applies the curve itself every two seconds — the EC has no curve \
+                     of its own.",
+            );
+        }
+
+        if !self.fan_note.is_empty() {
+            ui.label(
+                egui::RichText::new(&self.fan_note).color(egui::Color32::from_rgb(226, 150, 70)),
+            );
+        }
+        hint(
+            ui,
+            "Above 90 °C the helper hands the fan back to the EC and latches until \
                  you press Auto; in curve mode it first forces full speed at 80 °C \
                  rather than taking control away mid-game.",
-            );
+        );
     }
 
     fn sensors_tab(&mut self, ui: &mut egui::Ui) {
-            for (n, v) in &self.telemetry.temps {
-                row(ui, n, |ui| {
-                    ui.label(egui::RichText::new(format!("{v:.0} °C")).size(19.0));
-                });
-            }
-            if let Some(p) = self.telemetry.battery_pct {
-                let st = self.telemetry.battery_status.clone().unwrap_or_default();
-                row(ui, "Battery", |ui| {
-                    ui.label(egui::RichText::new(format!("{p} %  {st}")).size(19.0));
-                });
-            }
-            if let Some(w) = self.telemetry.apu_power_w {
-                row(ui, "APU", |ui| {
-                    ui.label(egui::RichText::new(format!("{w:.1} W")).size(19.0));
-                });
-            }
-            if let Some(w) = self.telemetry.power_now_w {
-                row(ui, "Draw", |ui| {
-                    ui.label(egui::RichText::new(format!("{w:.1} W")).size(19.0));
-                });
-            }
-            hint(ui, "Read-only, straight from hwmon and power_supply.");
+        for (n, v) in &self.telemetry.temps {
+            row(ui, n, |ui| {
+                ui.label(egui::RichText::new(format!("{v:.0} °C")).size(19.0));
+            });
+        }
+        if let Some(p) = self.telemetry.battery_pct {
+            let st = self.telemetry.battery_status.clone().unwrap_or_default();
+            row(ui, "Battery", |ui| {
+                ui.label(egui::RichText::new(format!("{p} %  {st}")).size(19.0));
+            });
+        }
+        if let Some(w) = self.telemetry.apu_power_w {
+            row(ui, "APU", |ui| {
+                ui.label(egui::RichText::new(format!("{w:.1} W")).size(19.0));
+            });
+        }
+        if let Some(w) = self.telemetry.power_now_w {
+            row(ui, "Draw", |ui| {
+                ui.label(egui::RichText::new(format!("{w:.1} W")).size(19.0));
+            });
+        }
+        hint(ui, "Read-only, straight from hwmon and power_supply.");
     }
 
     fn input_tab(&mut self, ui: &mut egui::Ui, sub: usize) {
         if !self.ip.running {
-            unavailable(ui, "InputPlumber", &Some("not responding on the system bus".into()));
+            unavailable(
+                ui,
+                "InputPlumber",
+                &Some("not responding on the system bus".into()),
+            );
             if self.helper_up && wide_button(ui, "Start InputPlumber").clicked() {
                 self.submit(Job::Helper("service inputplumber start".into()));
                 self.status = "Starting InputPlumber…".into();
@@ -824,8 +860,10 @@ impl App {
             }
             3 => {
                 let cur = self.ip.target.clone().unwrap_or_default();
-                let opts: Vec<(&str, &str)> =
-                    crate::inputplumber::TARGETS.iter().map(|(id, l)| (*id, *l)).collect();
+                let opts: Vec<(&str, &str)> = crate::inputplumber::TARGETS
+                    .iter()
+                    .map(|(id, l)| (*id, *l))
+                    .collect();
                 let picked = segmented(ui, cur.as_str(), &opts);
                 if let Some(id) = picked {
                     self.submit(Job::IpTarget(id.to_string()));
@@ -887,11 +925,7 @@ impl App {
                          stick-as-mouse with it.",
                     );
                 }
-                self.conflict_warning(
-                    ui,
-                    conflicts::Over::Input,
-                    "fight InputPlumber for the pad",
-                );
+                self.conflict_warning(ui, conflicts::Over::Input, "fight InputPlumber for the pad");
                 ui.add_space(8.0);
                 hint(ui, &format!("InputPlumber {}", self.ip.version));
             }
@@ -915,16 +949,16 @@ impl App {
 
         if let Some(c) = self.chg.capacity {
             row(ui, "Battery", |ui| {
-                ui.label(
-                    egui::RichText::new(format!("{c} %  {}", self.chg.status)).size(19.0),
-                );
+                ui.label(egui::RichText::new(format!("{c} %  {}", self.chg.status)).size(19.0));
             });
         }
 
         let limit = self.chg.limit;
         let mut opts: Vec<(u32, &str)> = vec![(0, "Off")];
-        let labels: Vec<String> =
-            crate::charge::LIMIT_PRESETS.iter().map(|p| format!("{p} %")).collect();
+        let labels: Vec<String> = crate::charge::LIMIT_PRESETS
+            .iter()
+            .map(|p| format!("{p} %"))
+            .collect();
         for (i, p) in crate::charge::LIMIT_PRESETS.iter().enumerate() {
             opts.push((*p, labels[i].as_str()));
         }
@@ -955,8 +989,11 @@ impl App {
             }) {
                 let b = if v { "inhibit-charge" } else { "auto" };
                 self.submit(Job::ChargeBehaviour(b.to_string()));
-                self.status =
-                    if v { "Bypassing the battery…".into() } else { "Charging normally…".into() };
+                self.status = if v {
+                    "Bypassing the battery…".into()
+                } else {
+                    "Charging normally…".into()
+                };
                 self.last_chg_poll = Instant::now();
             }
         });
@@ -1008,11 +1045,17 @@ impl App {
     /// paddles, which most emulated targets cannot express, so they are
     /// translated and then dropped.
     fn buttons_page(&mut self, ui: &mut egui::Ui) {
-        let opts: Vec<(&str, &str)> =
-            crate::inputplumber::ACTIONS.iter().map(|a| (a.id, a.label)).collect();
+        let opts: Vec<(&str, &str)> = crate::inputplumber::ACTIONS
+            .iter()
+            .map(|a| (a.id, a.label))
+            .collect();
         let mut chosen: Option<(String, String)> = None;
         for (id, label) in crate::inputplumber::SOURCES {
-            let cur = self.button_map.get(id).cloned().unwrap_or_else(|| "none".into());
+            let cur = self
+                .button_map
+                .get(id)
+                .cloned()
+                .unwrap_or_else(|| "none".into());
             if let Some(pick) = row(ui, label, |ui| segmented(ui, cur.as_str(), &opts)) {
                 chosen = Some((id.to_string(), pick.to_string()));
             }
@@ -1050,13 +1093,20 @@ impl App {
     /// Silence when nothing is running is the point: this only appears on a
     /// machine where the control really can be overruled.
     fn conflict_warning(&self, ui: &mut egui::Ui, over: conflicts::Over, what: &str) {
-        let found: Vec<&conflicts::Daemon> =
-            self.conflicts.iter().copied().filter(|d| d.fights(over)).collect();
+        let found: Vec<&conflicts::Daemon> = self
+            .conflicts
+            .iter()
+            .copied()
+            .filter(|d| d.fights(over))
+            .collect();
         if found.is_empty() {
             return;
         }
         let names: Vec<&str> = found.iter().map(|d| d.name).collect();
-        warn(ui, &format!("{} running — this can {what}.", names.join(" and ")));
+        warn(
+            ui,
+            &format!("{} running — this can {what}.", names.join(" and ")),
+        );
         for d in found {
             hint(ui, &format!("{}: {}", d.name, d.effect));
         }
@@ -1065,17 +1115,23 @@ impl App {
     fn about_tab(&mut self, ui: &mut egui::Ui, sub: usize) {
         match sub {
             0 => {
-                ui.label(egui::RichText::new("ayahelper").size(22.0).strong());
+                ui.label(egui::RichText::new("ayaHelper").size(22.0).strong());
                 hint(ui, &format!("version {}", env!("CARGO_PKG_VERSION")));
                 ui.add_space(10.0);
                 ui.label("The parts of AYASpace that matter, without a driver or a daemon.");
                 ui.add_space(12.0);
                 ui.label(egui::RichText::new("Transports").strong());
-                hint(ui, "Gamepad — GuLiKit MCU over an on-board UART at I/O 0x3E8, 115200 8N1");
+                hint(
+                    ui,
+                    "Gamepad — GuLiKit MCU over an on-board UART at I/O 0x3E8, 115200 8N1",
+                );
                 hint(ui, "Keyboard backlight — HID feature report 0x41");
                 hint(ui, "Ring LEDs — sysfs multicolor LED via ayaneo-platform");
                 hint(ui, "Fan — EC registers 0xD1C8 (mode) and 0x1804 (duty)");
-                hint(ui, "Power — ACPI platform_profile, and ryzenadj through the helper");
+                hint(
+                    ui,
+                    "Power — ACPI platform_profile, and ryzenadj through the helper",
+                );
             }
             1 => {
                 row(ui, "UI scale", |ui| {
@@ -1104,11 +1160,18 @@ impl App {
                     });
                 }
                 row(ui, "Helper", |ui| {
-                    ui.label(if self.helper_up { "running" } else { "not running" });
+                    ui.label(if self.helper_up {
+                        "running"
+                    } else {
+                        "not running"
+                    });
                 });
                 ui.add_space(8.0);
                 hint(ui, &format!("settings: {}", state::path().display()));
-                hint(ui, "Discovery re-runs every 10 s while anything is missing.");
+                hint(
+                    ui,
+                    "Discovery re-runs every 10 s while anything is missing.",
+                );
             }
         }
     }
@@ -1188,7 +1251,13 @@ impl eframe::App for App {
             self.last_reprobe = Instant::now();
             self.submit(Job::Reprobe(self.settings.record(), self.trusted));
         }
-        while let Ok(m) = self.worker.as_ref().map_or(Err(std::sync::mpsc::TryRecvError::Empty), |w| w.rx.try_recv()) {
+        while let Ok(m) = self
+            .worker
+            .as_ref()
+            .map_or(Err(std::sync::mpsc::TryRecvError::Empty), |w| {
+                w.rx.try_recv()
+            })
+        {
             match m {
                 Msg::Status(s) => self.status = s,
                 Msg::HelperReply(Ok(s)) => self.status = s,
@@ -1231,8 +1300,10 @@ impl eframe::App for App {
                 ui.add_space(8.0);
                 for t in Tab::ALL {
                     let selected = self.tab == t;
-                    let mut b = egui::Button::new(egui::RichText::new(t.label()).size(16.0))
-                        .min_size(egui::vec2(ui.available_width(), crate::widgets::TOUCH_H + 6.0));
+                    let mut b =
+                        egui::Button::new(egui::RichText::new(t.label()).size(16.0)).min_size(
+                            egui::vec2(ui.available_width(), crate::widgets::TOUCH_H + 6.0),
+                        );
                     if selected {
                         b = b.fill(ui.visuals().selection.bg_fill);
                     }

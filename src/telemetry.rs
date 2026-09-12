@@ -14,7 +14,9 @@ pub struct Telemetry {
 }
 
 fn read_trim(p: impl AsRef<std::path::Path>) -> Option<String> {
-    std::fs::read_to_string(p).ok().map(|s| s.trim().to_string())
+    std::fs::read_to_string(p)
+        .ok()
+        .map(|s| s.trim().to_string())
 }
 
 /// A few labels are more useful than a raw hwmon dump.
@@ -34,7 +36,9 @@ pub fn read() -> Telemetry {
         let mut entries: Vec<_> = rd.flatten().map(|e| e.path()).collect();
         entries.sort();
         for h in entries {
-            let Some(name) = read_trim(h.join("name")) else { continue };
+            let Some(name) = read_trim(h.join("name")) else {
+                continue;
+            };
             let Some(label) = pretty(&name) else { continue };
             if name == "amdgpu" {
                 // power1_input is instantaneous and power1_average is a rolling

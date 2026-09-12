@@ -50,7 +50,10 @@ fn set_tdp(stapm: u32, fast: u32, slow: u32) -> Result<()> {
     // stdout and can still exit 0, so require its own confirmation for each of
     // the three limits rather than assume success.
     for want in ["stapm_limit", "fast_limit", "slow_limit"] {
-        if !text.lines().any(|l| l.contains("Successfully set") && l.contains(want)) {
+        if !text
+            .lines()
+            .any(|l| l.contains("Successfully set") && l.contains(want))
+        {
             bail!("ryzenadj did not confirm {want}: {}", text.trim());
         }
     }
@@ -86,7 +89,11 @@ fn tdp_info() -> Result<String> {
             .and_then(|l| l.split('|').nth(2))
             .and_then(|v| v.trim().parse::<f32>().ok())
     };
-    match (field("STAPM LIMIT"), field("PPT LIMIT FAST"), field("PPT LIMIT SLOW")) {
+    match (
+        field("STAPM LIMIT"),
+        field("PPT LIMIT FAST"),
+        field("PPT LIMIT SLOW"),
+    ) {
         (Some(a), Some(b), Some(c)) => Ok(format!("{a:.0} {b:.0} {c:.0}")),
         _ => {
             let why = text
@@ -149,12 +156,12 @@ fn handle(stream: UnixStream) {
             ["charge", "behaviour", what] => {
                 crate::charge::set_behaviour(what).map(|_| charge_status())
             }
-            ["charge", "limit", "off"] => {
-                crate::charge::set_limit(0).map(|_| charge_status())
-            }
+            ["charge", "limit", "off"] => crate::charge::set_limit(0).map(|_| charge_status()),
             ["charge", "limit", pct] => match pct.parse::<u32>() {
                 Ok(p) => crate::charge::set_limit(p).map(|_| charge_status()),
-                Err(_) => Err(anyhow::anyhow!("charge limit needs a percentage or \"off\"")),
+                Err(_) => Err(anyhow::anyhow!(
+                    "charge limit needs a percentage or \"off\""
+                )),
             },
             ["profile", name] => set_profile(name).map(|_| "ok".into()),
             ["fan", "auto"] => {
@@ -183,7 +190,9 @@ fn handle(stream: UnixStream) {
                     }
                 }
                 if bad {
-                    Err(anyhow::anyhow!("curve points must be temp:speed, comma separated"))
+                    Err(anyhow::anyhow!(
+                        "curve points must be temp:speed, comma separated"
+                    ))
                 } else {
                     let n = pts.len();
                     crate::fan::set_curve(pts).map(|_| format!("curve, {n} points"))
@@ -199,7 +208,7 @@ fn handle(stream: UnixStream) {
                     Ok(o) if o.status.success() => Ok(format!("inputplumber {op}")),
                     Ok(o) => Err(anyhow::anyhow!(
                         "systemctl {op} inputplumber: {}",
-                        String::from_utf8_lossy(&o.stderr).trim().to_string()
+                        String::from_utf8_lossy(&o.stderr).trim()
                     )),
                     Err(e) => Err(anyhow::anyhow!("systemctl: {e}")),
                 }
@@ -226,7 +235,9 @@ fn handle(stream: UnixStream) {
                     st.mode_raw,
                     st.duty_raw,
                     st.tripped,
-                    st.temp_c.map(|t| format!("{t:.1}")).unwrap_or_else(|| "?".into()),
+                    st.temp_c
+                        .map(|t| format!("{t:.1}"))
+                        .unwrap_or_else(|| "?".into()),
                     target
                 )
             }),
@@ -294,10 +305,6 @@ pub fn request(cmd: &str) -> Result<String> {
     let line = line.trim().to_string();
     match line.strip_prefix("ok ") {
         Some(rest) => Ok(rest.to_string()),
-        None => bail!("{}", line.strip_prefix("err ").unwrap_or(&line).to_string()),
+        None => bail!("{}", line.strip_prefix("err ").unwrap_or(&line)),
     }
-}
-
-pub fn available() -> bool {
-    request("ping").is_ok()
 }

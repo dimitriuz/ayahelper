@@ -171,9 +171,7 @@ fn run(
                 },
                 None => Msg::Status("Rings unavailable".into()),
             },
-            Job::Helper(cmd) => {
-                Msg::HelperReply(helper::request(&cmd).map_err(|e| e.to_string()))
-            }
+            Job::Helper(cmd) => Msg::HelperReply(helper::request(&cmd).map_err(|e| e.to_string())),
             Job::PollHelper => match helper::request("fan status") {
                 Ok(s) => Msg::HelperState(true, s),
                 Err(_) => Msg::HelperState(false, String::new()),
@@ -198,12 +196,10 @@ fn run(
             } else {
                 format!("charge limit {pct}")
             })),
-            Job::IpButton(src, act) => {
-                match crate::inputplumber::set_button_action(&src, &act) {
-                    Ok(()) => Msg::Status(format!("{src} → {act}")),
-                    Err(e) => Msg::Status(e),
-                }
-            }
+            Job::IpButton(src, act) => match crate::inputplumber::set_button_action(&src, &act) {
+                Ok(()) => Msg::Status(format!("{src} → {act}")),
+                Err(e) => Msg::Status(e),
+            },
             Job::PollIp => Msg::IpState(crate::inputplumber::status()),
             Job::IpProfile(path, speed) => match crate::inputplumber::load_profile(&path) {
                 Ok(()) => {

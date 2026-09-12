@@ -51,7 +51,9 @@ fn run_once(on_press: &impl Fn()) {
         .stderr(Stdio::null())
         .spawn();
     let Ok(mut child) = child else { return };
-    let Some(out) = child.stdout.take() else { return };
+    let Some(out) = child.stdout.take() else {
+        return;
+    };
 
     // busctl prints each message as a block; the action name and its value are
     // on separate lines, so the action is remembered until its value arrives.
@@ -67,7 +69,12 @@ fn run_once(on_press: &impl Fn()) {
         } else if let Some(rest) = t.strip_prefix("DOUBLE ") {
             // Released is value 0, and acting on both edges would open the
             // window and immediately open it again.
-            let down = rest.trim_end_matches(';').trim().parse::<f64>().unwrap_or(0.0) >= 0.5;
+            let down = rest
+                .trim_end_matches(';')
+                .trim()
+                .parse::<f64>()
+                .unwrap_or(0.0)
+                >= 0.5;
             if pending && down {
                 on_press();
             }

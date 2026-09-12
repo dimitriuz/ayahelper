@@ -22,10 +22,6 @@ pub fn send_to_gui(cmd: &str) -> std::io::Result<()> {
     s.write_all(format!("{cmd}\n").as_bytes())
 }
 
-pub fn gui_running() -> bool {
-    send_to_gui("ping").is_ok()
-}
-
 /// Own the socket for the lifetime of the window.
 pub fn listen(tx: Sender<TrayMsg>, repaint: impl Fn() + Send + 'static) {
     let p = socket_path();
@@ -34,7 +30,9 @@ pub fn listen(tx: Sender<TrayMsg>, repaint: impl Fn() + Send + 'static) {
     if UnixStream::connect(&p).is_err() {
         let _ = std::fs::remove_file(&p);
     }
-    let Ok(listener) = UnixListener::bind(&p) else { return };
+    let Ok(listener) = UnixListener::bind(&p) else {
+        return;
+    };
     std::thread::spawn(move || {
         for stream in listener.incoming().flatten() {
             let mut line = String::new();

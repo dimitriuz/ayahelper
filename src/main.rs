@@ -12,18 +12,18 @@ mod fan;
 mod gamepad;
 mod helper;
 mod hotkey;
-mod ipc;
 mod hw;
 mod inputplumber;
+mod ipc;
 mod kbdlight;
 mod power;
 mod rings;
 mod state;
 mod telemetry;
 mod tray;
+mod ui;
 mod widgets;
 mod worker;
-mod ui;
 
 use anyhow::Result;
 
@@ -38,6 +38,7 @@ ayahelper - AYANEO handheld control
     ayahelper --map B A    bind handheld button B to action A (no args: list them)
     ayahelper --privileged run the privileged part (systemd service)
     ayahelper --fan-auto   hand the fan back to the EC and exit (failsafe)
+    ayahelper --version    print the version and exit
     ayahelper --help
 ";
 
@@ -53,12 +54,10 @@ fn print_status() {
         println!("   and nothing has been written to it)");
     }
     println!();
-    let line = |name: &str, ok: &Option<std::path::PathBuf>, err: &Option<String>| {
-        match (ok, err) {
-            (Some(p), _) => println!("  {name:9} {}", p.display()),
-            (None, Some(e)) => println!("  {name:9} unavailable - {e}"),
-            (None, None) => println!("  {name:9} unavailable"),
-        }
+    let line = |name: &str, ok: &Option<std::path::PathBuf>, err: &Option<String>| match (ok, err) {
+        (Some(p), _) => println!("  {name:9} {}", p.display()),
+        (None, Some(e)) => println!("  {name:9} unavailable - {e}"),
+        (None, None) => println!("  {name:9} unavailable"),
     };
     println!("devices:");
     line("gamepad", &d.gamepad, &d.gamepad_err);
@@ -78,37 +77,79 @@ fn print_status() {
 
     println!();
     println!("gamepad record  {}", state::hex(&rec.0));
-    println!("  deadzone      {}", if rec.deadzone() { "on" } else { "off" });
+    println!(
+        "  deadzone      {}",
+        if rec.deadzone() { "on" } else { "off" }
+    );
     let sens = |l: u8| gamepad::SENS.iter().find(|(k, _)| *k == l).map(|(_, v)| *v);
     println!(
         "  stick sens    left {:?}  right {:?}",
         sens(rec.sens(true)),
         sens(rec.sens(false))
     );
-    let lvl = |v: u8| gamepad::LEVELS.iter().find(|(k, _)| *k == v).map(|(_, n)| *n).unwrap_or("?");
+    let lvl = |v: u8| {
+        gamepad::LEVELS
+            .iter()
+            .find(|(k, _)| *k == v)
+            .map(|(_, n)| *n)
+            .unwrap_or("?")
+    };
     println!("  rumble        {}", lvl(rec.rumble()));
-    println!("  trigger L2/R2 {} / {}", lvl(rec.trigger(true)), lvl(rec.trigger(false)));
-    println!("  gyro L1/L2    {} / {}", lvl(rec.gyro(true)), lvl(rec.gyro(false)));
-    let tb = |v: u8| gamepad::TURBO.iter().find(|(k, _)| *k == v).map(|(_, n)| *n).unwrap_or("?");
+    println!(
+        "  trigger L2/R2 {} / {}",
+        lvl(rec.trigger(true)),
+        lvl(rec.trigger(false))
+    );
+    println!(
+        "  gyro L1/L2    {} / {}",
+        lvl(rec.gyro(true)),
+        lvl(rec.gyro(false))
+    );
+    let tb = |v: u8| {
+        gamepad::TURBO
+            .iter()
+            .find(|(k, _)| *k == v)
+            .map(|(_, n)| *n)
+            .unwrap_or("?")
+    };
     println!(
         "  turbo A/B/X/Y/R1/R2  {} {} {} {} {} {}",
-        tb(rec.turbo(0)), tb(rec.turbo(1)), tb(rec.turbo(2)),
-        tb(rec.turbo(3)), tb(rec.turbo(4)), tb(rec.turbo(5))
+        tb(rec.turbo(0)),
+        tb(rec.turbo(1)),
+        tb(rec.turbo(2)),
+        tb(rec.turbo(3)),
+        tb(rec.turbo(4)),
+        tb(rec.turbo(5))
     );
     println!("  swap ABXY     {}", rec.swap_abxy());
 
     println!();
     let k = s.kbdlight;
-    let mode = kbdlight::MODES.iter().find(|(v, _)| *v == k.mode).map(|(_, n)| *n).unwrap_or("?");
-    println!("keyboard light  #{:06X}  {}  brightness {}%  {}  fn {}",
-        k.color, mode, k.brightness,
+    let mode = kbdlight::MODES
+        .iter()
+        .find(|(v, _)| *v == k.mode)
+        .map(|(_, n)| *n)
+        .unwrap_or("?");
+    println!(
+        "keyboard light  #{:06X}  {}  brightness {}%  {}  fn {}",
+        k.color,
+        mode,
+        k.brightness,
         if k.enable { "on" } else { "off" },
-        if k.fn_ison { "on" } else { "off" });
+        if k.fn_ison { "on" } else { "off" }
+    );
     println!("  report        {}", state::hex(&k.report()));
-    println!("rings           #{:06X}  brightness {}", s.rings.color, s.rings.brightness);
+    println!(
+        "rings           #{:06X}  brightness {}",
+        s.rings.color, s.rings.brightness
+    );
 
     println!();
-    println!("power profile   {:?}  of {:?}", power::current(), power::available());
+    println!(
+        "power profile   {:?}  of {:?}",
+        power::current(),
+        power::available()
+    );
     println!("  writable      {}", power::writable_directly());
 
     let t = telemetry::read();
@@ -205,7 +246,9 @@ fn restore() -> Result<()> {
         let r = if power::writable_directly() {
             std::fs::write(power::PATH, p).map_err(|e| e.to_string())
         } else {
-            helper::request(&format!("profile {p}")).map(|_| ()).map_err(|e| e.to_string())
+            helper::request(&format!("profile {p}"))
+                .map(|_| ())
+                .map_err(|e| e.to_string())
         };
         match r {
             Ok(()) => println!("profile: {p}"),
@@ -279,6 +322,10 @@ fn main() -> Result<()> {
         Some("--window") => run_gui(),
         Some("--status") => {
             print_status();
+            Ok(())
+        }
+        Some("--version" | "-V") => {
+            println!("ayahelper {}", env!("CARGO_PKG_VERSION"));
             Ok(())
         }
         Some("--restore") => restore(),

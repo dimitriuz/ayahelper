@@ -93,7 +93,11 @@ pub fn curve_speed(points: &[(u8, u8)], temp: f32) -> u8 {
         let (t0, s0) = (w[0].0 as f32, w[0].1 as f32);
         let (t1, s1) = (w[1].0 as f32, w[1].1 as f32);
         if temp >= t0 && temp <= t1 {
-            let f = if (t1 - t0).abs() < f32::EPSILON { 0.0 } else { (temp - t0) / (t1 - t0) };
+            let f = if (t1 - t0).abs() < f32::EPSILON {
+                0.0
+            } else {
+                (temp - t0) / (t1 - t0)
+            };
             return (s0 + (s1 - s0) * f).round() as u8;
         }
     }
@@ -201,9 +205,7 @@ pub fn set_manual(pct: u8, force_low: bool) -> Result<()> {
         bail!("duty {pct}% out of range 0-100");
     }
     if pct < MIN_MANUAL_PCT && !force_low {
-        bail!(
-            "duty {pct}% is below the {MIN_MANUAL_PCT}% floor; pass 'force' to override"
-        );
+        bail!("duty {pct}% is below the {MIN_MANUAL_PCT}% floor; pass 'force' to override");
     }
     if TRIPPED.load(Ordering::SeqCst) {
         bail!(

@@ -106,11 +106,11 @@ impl Record {
 
     /// Bytes 5-7: A/B, X/Y, R1/R2, high nibble first.
     pub fn turbo(&self, idx: usize) -> u8 {
-        let (byte, high) = (5 + idx / 2, idx % 2 == 0);
+        let (byte, high) = (5 + idx / 2, idx.is_multiple_of(2));
         nib(self.0[byte], high)
     }
     pub fn set_turbo(&mut self, idx: usize, v: u8) {
-        let (byte, high) = (5 + idx / 2, idx % 2 == 0);
+        let (byte, high) = (5 + idx / 2, idx.is_multiple_of(2));
         self.0[byte] = set_nib(self.0[byte], high, v);
     }
 
@@ -254,9 +254,9 @@ pub fn confirm_port(rec: &Record) -> Option<PathBuf> {
     if let Ok(p) = std::env::var("GULIKIT_PORT") {
         return Some(PathBuf::from(p));
     }
-    candidate_ports().into_iter().find(|p| {
-        (0..5).any(|_| transact_once(p, rec, Duration::from_millis(300)).is_ok())
-    })
+    candidate_ports()
+        .into_iter()
+        .find(|p| (0..5).any(|_| transact_once(p, rec, Duration::from_millis(300)).is_ok()))
 }
 
 /// Whether a port can be opened at all, as opposed to answering.

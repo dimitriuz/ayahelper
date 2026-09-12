@@ -27,9 +27,10 @@ pub const PRESETS: [u32; 5] = [0xFFFFFF, 0xFFD000, 0x0091FF, 0x08FF00, 0xFF0000]
 /// this is a few percent of one core.
 pub const FRAME_MS: u64 = 50;
 
-#[derive(Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, Default)]
 pub enum Effect {
     /// The chosen colour, held.
+    #[default]
     Static,
     /// The chosen colour, fading in and out.
     Breathe,
@@ -37,14 +38,11 @@ pub enum Effect {
     Rainbow,
 }
 
-impl Default for Effect {
-    fn default() -> Self {
-        Self::Static
-    }
-}
-
-pub const EFFECTS: [(Effect, &str); 3] =
-    [(Effect::Static, "Static"), (Effect::Breathe, "Breathe"), (Effect::Rainbow, "Rainbow")];
+pub const EFFECTS: [(Effect, &str); 3] = [
+    (Effect::Static, "Static"),
+    (Effect::Breathe, "Breathe"),
+    (Effect::Rainbow, "Rainbow"),
+];
 
 #[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct Rings {
@@ -56,7 +54,11 @@ pub struct Rings {
 
 impl Default for Rings {
     fn default() -> Self {
-        Self { color: 0xFFFFFF, brightness: 128, effect: Effect::Static }
+        Self {
+            color: 0xFFFFFF,
+            brightness: 128,
+            effect: Effect::Static,
+        }
     }
 }
 
@@ -112,19 +114,16 @@ pub fn find_device() -> Option<PathBuf> {
 }
 
 pub fn apply(dir: &Path, st: &Rings) -> Result<()> {
-    let (r, g, b) = ((st.color >> 16) & 0xFF, (st.color >> 8) & 0xFF, st.color & 0xFF);
+    let (r, g, b) = (
+        (st.color >> 16) & 0xFF,
+        (st.color >> 8) & 0xFF,
+        st.color & 0xFF,
+    );
     std::fs::write(dir.join("multi_intensity"), format!("{r} {g} {b}"))
         .with_context(|| format!("write multi_intensity in {}", dir.display()))?;
     std::fs::write(dir.join("brightness"), st.brightness.to_string())
         .with_context(|| format!("write brightness in {}", dir.display()))?;
     Ok(())
-}
-
-pub fn max_brightness(dir: &Path) -> u32 {
-    std::fs::read_to_string(dir.join("max_brightness"))
-        .ok()
-        .and_then(|s| s.trim().parse().ok())
-        .unwrap_or(255)
 }
 
 /// Take the animator lock, or fail if another process already holds it.
@@ -190,7 +189,14 @@ pub fn run_effects() {
             last_static = None;
             let phase = (start.elapsed().as_secs_f32() / period(st.effect)).fract();
             let (color, brightness) = frame(&st, phase);
-            let _ = apply(&dir, &Rings { color, brightness, effect: st.effect });
+            let _ = apply(
+                &dir,
+                &Rings {
+                    color,
+                    brightness,
+                    effect: st.effect,
+                },
+            );
         }
     });
 }

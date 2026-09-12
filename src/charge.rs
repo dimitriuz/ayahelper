@@ -60,7 +60,9 @@ pub fn path() -> Option<PathBuf> {
 }
 
 fn read_trim(p: impl AsRef<Path>) -> Option<String> {
-    std::fs::read_to_string(p).ok().map(|s| s.trim().to_string())
+    std::fs::read_to_string(p)
+        .ok()
+        .map(|s| s.trim().to_string())
 }
 
 /// The selected behaviour, parsed out of the kernel's `a [b] c` list format.
@@ -73,8 +75,12 @@ pub fn behaviour() -> Option<String> {
 
 /// Every behaviour this battery accepts, in the order the kernel lists them.
 pub fn available() -> Vec<String> {
-    let Some(raw) = path().and_then(read_trim) else { return Vec::new() };
-    raw.split_whitespace().map(|w| w.trim_matches(['[', ']']).to_string()).collect()
+    let Some(raw) = path().and_then(read_trim) else {
+        return Vec::new();
+    };
+    raw.split_whitespace()
+        .map(|w| w.trim_matches(['[', ']']).to_string())
+        .collect()
 }
 
 pub fn set_behaviour(what: &str) -> Result<()> {
@@ -176,7 +182,11 @@ fn verify(state: &mut Option<(std::time::Instant, u64)>) {
             if since.elapsed().as_secs() < VERIFY_SECS {
                 return;
             }
-            let verdict = if now.saturating_sub(*start) > VERIFY_UWH { 2 } else { 1 };
+            let verdict = if now.saturating_sub(*start) > VERIFY_UWH {
+                2
+            } else {
+                1
+            };
             if HONOURED.swap(verdict, Ordering::SeqCst) != verdict {
                 eprintln!(
                     "charge: inhibit-charge is {} by this EC (+{} mWh over {VERIFY_SECS}s)",
@@ -306,7 +316,9 @@ impl Status {
 pub fn parse(line: &str) -> Status {
     let mut s = Status::default();
     for kv in line.split_whitespace() {
-        let Some((k, v)) = kv.split_once('=') else { continue };
+        let Some((k, v)) = kv.split_once('=') else {
+            continue;
+        };
         match k {
             "behaviour" => s.behaviour = v.to_string(),
             "limit" => s.limit = v.parse().unwrap_or(0),

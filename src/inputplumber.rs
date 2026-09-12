@@ -61,12 +61,19 @@ pub struct Status {
 
 fn busctl(args: &[&str]) -> Option<String> {
     let out = Command::new("busctl").args(args).output().ok()?;
-    out.status.success().then(|| String::from_utf8_lossy(&out.stdout).trim().to_string())
+    out.status
+        .success()
+        .then(|| String::from_utf8_lossy(&out.stdout).trim().to_string())
 }
 
 /// busctl prints properties as `TYPE value`; strip the type and quotes.
 fn scalar(s: &str) -> String {
-    s.split_once(' ').map(|(_, v)| v).unwrap_or(s).trim().trim_matches('"').to_string()
+    s.split_once(' ')
+        .map(|(_, v)| v)
+        .unwrap_or(s)
+        .trim()
+        .trim_matches('"')
+        .to_string()
 }
 
 fn get(path: &str, iface: &str, prop: &str) -> Option<String> {
@@ -87,7 +94,12 @@ pub fn status() -> Status {
     // Each target object carries its own DeviceType, which is exactly the id
     // SetTargetDevices takes - no need to infer anything from display names.
     if let Some(raw) = busctl(&[
-        "--system", "get-property", SERVICE, COMPOSITE, COMPOSITE_IF, "TargetDevices",
+        "--system",
+        "get-property",
+        SERVICE,
+        COMPOSITE,
+        COMPOSITE_IF,
+        "TargetDevices",
     ]) {
         for path in raw.split('"').filter(|s| s.starts_with('/')) {
             if let Some(kind) = get(path, TARGET_IF, "DeviceType") {
@@ -130,14 +142,21 @@ fn unescape(s: &str) -> String {
 }
 
 pub fn profile_yaml() -> Option<String> {
-    busctl(&["--system", "call", SERVICE, COMPOSITE, COMPOSITE_IF, "GetProfileYaml"])
-        .map(|s| unescape(&s))
-        .filter(|s| !s.is_empty())
+    busctl(&[
+        "--system",
+        "call",
+        SERVICE,
+        COMPOSITE,
+        COMPOSITE_IF,
+        "GetProfileYaml",
+    ])
+    .map(|s| unescape(&s))
+    .filter(|s| !s.is_empty())
 }
 
 fn parse_speed(yaml: &str) -> Option<u32> {
     let i = yaml.find("speed_pps:")?;
-    yaml[i + 10..].trim_start().split_whitespace().next()?.parse().ok()
+    yaml[i + 10..].split_whitespace().next()?.parse().ok()
 }
 
 /// The mouse deadzone, as a percentage. Only the one under `motion:` counts -
@@ -147,7 +166,7 @@ fn parse_deadzone(yaml: &str) -> Option<u32> {
     let m = yaml.find("motion:")?;
     let rest = &yaml[m..];
     let i = rest.find("deadzone:")?;
-    let v: f64 = rest[i + 9..].trim_start().split_whitespace().next()?.parse().ok()?;
+    let v: f64 = rest[i + 9..].split_whitespace().next()?.parse().ok()?;
     Some((v * 100.0).round() as u32)
 }
 
@@ -164,7 +183,8 @@ fn set_field(key: &str, value: &str, after: Option<&str>) -> Result<(), String> 
             .ok_or_else(|| format!("this profile has no {key}"))?;
     let rest = &yaml[i + key.len() + 1..];
     let lead = rest.len() - rest.trim_start().len();
-    let old: String = rest.trim_start()
+    let old: String = rest
+        .trim_start()
         .chars()
         .take_while(|c| c.is_ascii_digit() || *c == '.')
         .collect();
@@ -172,14 +192,27 @@ fn set_field(key: &str, value: &str, after: Option<&str>) -> Result<(), String> 
         return Err(format!("could not parse {key}"));
     }
     let new = format!("{}{key}: {value}{}", &yaml[..i], &rest[lead + old.len()..]);
-    busctl(&["--system", "call", SERVICE, COMPOSITE, COMPOSITE_IF, "LoadProfileFromYaml", "s", &new])
-        .map(|_| ())
-        .ok_or_else(|| "InputPlumber rejected the profile".to_string())
+    busctl(&[
+        "--system",
+        "call",
+        SERVICE,
+        COMPOSITE,
+        COMPOSITE_IF,
+        "LoadProfileFromYaml",
+        "s",
+        &new,
+    ])
+    .map(|_| ())
+    .ok_or_else(|| "InputPlumber rejected the profile".to_string())
 }
 
 /// Pointer deadzone, as a percentage of full deflection.
 pub fn set_mouse_deadzone(pct: u32) -> Result<(), String> {
-    set_field("deadzone", &format!("{:.2}", pct as f64 / 100.0), Some("motion:"))
+    set_field(
+        "deadzone",
+        &format!("{:.2}", pct as f64 / 100.0),
+        Some("motion:"),
+    )
 }
 
 /// Rewrite speed_pps in the live profile and reload it.
@@ -194,8 +227,13 @@ pub fn set_mouse_speed(pps: u32) -> Result<(), String> {
 /// customised profile of the same name wins.
 pub fn profiles() -> Vec<(String, PathBuf)> {
     let mut out: Vec<(String, PathBuf)> = Vec::new();
-    for dir in ["/usr/share/inputplumber/profiles", "/etc/inputplumber/profiles"] {
-        let Ok(rd) = std::fs::read_dir(dir) else { continue };
+    for dir in [
+        "/usr/share/inputplumber/profiles",
+        "/etc/inputplumber/profiles",
+    ] {
+        let Ok(rd) = std::fs::read_dir(dir) else {
+            continue;
+        };
         let mut found: Vec<PathBuf> = rd
             .flatten()
             .map(|e| e.path())
@@ -212,7 +250,10 @@ pub fn profiles() -> Vec<(String, PathBuf)> {
                         .map(|l| l[5..].trim().trim_matches('"').to_string())
                 })
                 .unwrap_or_else(|| {
-                    p.file_stem().unwrap_or_default().to_string_lossy().to_string()
+                    p.file_stem()
+                        .unwrap_or_default()
+                        .to_string_lossy()
+                        .to_string()
                 });
             out.retain(|(l, _)| l != &label);
             out.push((label, p));
@@ -223,7 +264,13 @@ pub fn profiles() -> Vec<(String, PathBuf)> {
 
 pub fn load_profile(path: &std::path::Path) -> Result<(), String> {
     busctl(&[
-        "--system", "call", SERVICE, COMPOSITE, COMPOSITE_IF, "LoadProfilePath", "s",
+        "--system",
+        "call",
+        SERVICE,
+        COMPOSITE,
+        COMPOSITE_IF,
+        "LoadProfilePath",
+        "s",
         &path.to_string_lossy(),
     ])
     .map(|_| ())
@@ -236,8 +283,18 @@ pub fn set_target(id: &str) -> Result<(), String> {
     // button mapped to a UI action - SetTargetDevices replaces the whole set,
     // so anything not named here is silently detached.
     busctl(&[
-        "--system", "call", SERVICE, COMPOSITE, COMPOSITE_IF, "SetTargetDevices", "as", "4", id,
-        "keyboard", "mouse", "dbus",
+        "--system",
+        "call",
+        SERVICE,
+        COMPOSITE,
+        COMPOSITE_IF,
+        "SetTargetDevices",
+        "as",
+        "4",
+        id,
+        "keyboard",
+        "mouse",
+        "dbus",
     ])
     .map(|_| ())
     .ok_or_else(|| format!("could not switch to {id}"))
@@ -245,7 +302,13 @@ pub fn set_target(id: &str) -> Result<(), String> {
 
 pub fn set_manage_all(on: bool) -> Result<(), String> {
     busctl(&[
-        "--system", "set-property", SERVICE, MANAGER, MANAGER_IF, "ManageAllDevices", "b",
+        "--system",
+        "set-property",
+        SERVICE,
+        MANAGER,
+        MANAGER_IF,
+        "ManageAllDevices",
+        "b",
         if on { "true" } else { "false" },
     ])
     .map(|_| ())
@@ -260,8 +323,11 @@ pub fn set_manage_all(on: bool) -> Result<(), String> {
 /// turns the Ctrl+Meta+F15/F16 chords the keyboard MCU sends into `LeftTop` and
 /// `RightTop`. Guide is deliberately absent - Steam expects it, and remapping it
 /// breaks more than it fixes.
-pub const SOURCES: [(&str, &str); 3] =
-    [("LeftTop", "LC"), ("RightTop", "RC"), ("QuickAccess", "Custom")];
+pub const SOURCES: [(&str, &str); 3] = [
+    ("LeftTop", "LC"),
+    ("RightTop", "RC"),
+    ("QuickAccess", "Custom"),
+];
 
 /// What a button can be made to do, as the YAML fragment it becomes.
 pub struct Action {
@@ -272,10 +338,26 @@ pub struct Action {
 }
 
 pub const ACTIONS: [Action; 6] = [
-    Action { id: "none", label: "Nothing", yaml: "" },
-    Action { id: "esc", label: "Escape", yaml: "  - keyboard: KeyEsc" },
-    Action { id: "app", label: "Open app", yaml: "  - dbus: ui_quick" },
-    Action { id: "osk", label: "On-screen KB", yaml: "  - dbus: ui_osk" },
+    Action {
+        id: "none",
+        label: "Nothing",
+        yaml: "",
+    },
+    Action {
+        id: "esc",
+        label: "Escape",
+        yaml: "  - keyboard: KeyEsc",
+    },
+    Action {
+        id: "app",
+        label: "Open app",
+        yaml: "  - dbus: ui_quick",
+    },
+    Action {
+        id: "osk",
+        label: "On-screen KB",
+        yaml: "  - dbus: ui_osk",
+    },
     Action {
         id: "guide",
         label: "Steam",
@@ -283,7 +365,11 @@ pub const ACTIONS: [Action; 6] = [
     },
     // The paddle a button becomes depends on which button it is, so the
     // capability is filled in per source rather than baked in here.
-    Action { id: "paddle", label: "Paddle", yaml: "  - gamepad:\n      button: {paddle}" },
+    Action {
+        id: "paddle",
+        label: "Paddle",
+        yaml: "  - gamepad:\n      button: {paddle}",
+    },
 ];
 
 /// Which Elite paddle a given button should become.
@@ -333,33 +419,11 @@ fn split_entries(yaml: &str) -> (String, Vec<String>) {
 fn entry_source(entry: &str) -> Option<String> {
     let src = entry.find("source_event:")?;
     let end = entry.find("target_events:").unwrap_or(entry.len());
-    entry[src..end]
-        .lines()
-        .find_map(|l| l.trim().strip_prefix("button: ").map(|b| b.trim().to_string()))
-}
-
-/// Which action each offered button currently performs, read from the live
-/// profile. Buttons with no entry, or one this app cannot express, are absent.
-pub fn button_actions() -> std::collections::HashMap<String, String> {
-    let mut out = std::collections::HashMap::new();
-    let Some(yaml) = profile_yaml() else { return out };
-    let (_, entries) = split_entries(&yaml);
-    for entry in entries {
-        let Some(src) = entry_source(&entry) else { continue };
-        if !SOURCES.iter().any(|(id, _)| *id == src) {
-            continue;
-        }
-        let Some(i) = entry.find("target_events:") else { continue };
-        let body = entry[i + "target_events:".len()..].trim_end();
-        let body = body.trim_start_matches('\n');
-        let found = ACTIONS.iter().find(|a| {
-            !a.yaml.is_empty() && body.trim_end() == a.yaml.replace("{paddle}", paddle_for(&src))
-        });
-        if let Some(a) = found {
-            out.insert(src, a.id.to_string());
-        }
-    }
-    out
+    entry[src..end].lines().find_map(|l| {
+        l.trim()
+            .strip_prefix("button: ")
+            .map(|b| b.trim().to_string())
+    })
 }
 
 /// Point one button at one action, in the running profile.
@@ -390,7 +454,16 @@ pub fn set_button_action(source: &str, action_id: &str) -> Result<(), String> {
         ));
     }
 
-    busctl(&["--system", "call", SERVICE, COMPOSITE, COMPOSITE_IF, "LoadProfileFromYaml", "s", &out])
-        .map(|_| ())
-        .ok_or_else(|| "InputPlumber rejected the profile".to_string())
+    busctl(&[
+        "--system",
+        "call",
+        SERVICE,
+        COMPOSITE,
+        COMPOSITE_IF,
+        "LoadProfileFromYaml",
+        "s",
+        &out,
+    ])
+    .map(|_| ())
+    .ok_or_else(|| "InputPlumber rejected the profile".to_string())
 }
