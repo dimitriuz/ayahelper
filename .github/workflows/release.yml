@@ -27,7 +27,8 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             libgl1-mesa-dev libxkbcommon-dev libwayland-dev \
             libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev \
-            libxkbcommon-x11-dev
+            libxkbcommon-x11-dev \
+            libdbus-1-dev pkg-config
 
       - uses: dtolnay/rust-toolchain@stable
 
