@@ -104,7 +104,7 @@ pub fn swatch(ui: &mut Ui, rgb: u32, selected: bool) -> Response {
     let size = Vec2::splat(TOUCH_H);
     let mut b = Button::new("").fill(c).min_size(size);
     if selected {
-        b = b.stroke(egui::Stroke::new(3.0, ui.visuals().selection.stroke.color));
+        b = b.stroke(egui::Stroke::new(3.0_f32, ui.visuals().selection.stroke.color));
     }
     ui.add_sized(size, b)
 }
@@ -244,7 +244,7 @@ pub fn fan_curve(
         let x = to_screen(t, s_range.0).x;
         p.line_segment(
             [egui::pos2(x, rect.top()), egui::pos2(x, rect.bottom())],
-            egui::Stroke::new(1.0, grid),
+            egui::Stroke::new(1.0_f32, grid),
         );
         // A label centred on the very edge loses half its digits to the clip
         // rect, so pin the outermost ones inward.
@@ -268,7 +268,7 @@ pub fn fan_curve(
         let y = to_screen(t_range.0, s).y;
         p.line_segment(
             [egui::pos2(rect.left(), y), egui::pos2(rect.right(), y)],
-            egui::Stroke::new(1.0, grid),
+            egui::Stroke::new(1.0_f32, grid),
         );
         p.text(
             egui::pos2(rect.left() + 3.0, y),
@@ -285,7 +285,7 @@ pub fn fan_curve(
             let x = to_screen(lt, 0.0).x;
             p.line_segment(
                 [egui::pos2(x, rect.top()), egui::pos2(x, rect.bottom())],
-                egui::Stroke::new(2.0, Color32::from_rgb(226, 150, 70)),
+                egui::Stroke::new(2.0_f32, Color32::from_rgb(226, 150, 70)),
             );
         }
     }
@@ -303,7 +303,7 @@ pub fn fan_curve(
         path.push(to_screen(t_range.1, last.1 as f32));
     }
     for w in path.windows(2) {
-        p.line_segment([w[0], w[1]], egui::Stroke::new(2.5, line));
+        p.line_segment([w[0], w[1]], egui::Stroke::new(2.5_f32, line));
     }
 
     // draggable handles, deliberately larger than they look
@@ -317,7 +317,7 @@ pub fn fan_curve(
         let resp = ui.interact(hit, id, egui::Sense::drag());
         let r = if resp.dragged() { 13.0 } else { 10.0 };
         p.circle_filled(pos, r, line);
-        p.circle_stroke(pos, r, egui::Stroke::new(2.0, vis.extreme_bg_color));
+        p.circle_stroke(pos, r, egui::Stroke::new(2.0_f32, vis.extreme_bg_color));
 
         if resp.dragged() {
             if let Some(m) = resp.interact_pointer_pos() {
