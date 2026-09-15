@@ -337,7 +337,7 @@ pub struct Action {
     pub yaml: &'static str,
 }
 
-pub const ACTIONS: [Action; 6] = [
+pub const ACTIONS: [Action; 8] = [
     Action {
         id: "none",
         label: "Nothing",
@@ -347,6 +347,20 @@ pub const ACTIONS: [Action; 6] = [
         id: "esc",
         label: "Escape",
         yaml: "  - keyboard: KeyEsc",
+    },
+    // Mouse clicks come from the profile, not from the emulated pad, so these
+    // work on every target. On the Steam Deck target the clicks you get without
+    // them are Steam's own mouse mode, which is why they vanish the moment you
+    // switch to an Xbox target and the motion carries on regardless.
+    Action {
+        id: "lclick",
+        label: "Left click",
+        yaml: "  - mouse:\n      button: Left",
+    },
+    Action {
+        id: "rclick",
+        label: "Right click",
+        yaml: "  - mouse:\n      button: Right",
     },
     Action {
         id: "app",

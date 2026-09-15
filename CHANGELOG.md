@@ -7,6 +7,13 @@ minor bump may change behaviour.
 
 ## [Unreleased]
 
+### Added
+
+- `lclick` and `rclick` button actions — left and right mouse clicks, bindable
+  from Input → Buttons or `--map`. Clicks driven this way come from the
+  InputPlumber profile, so unlike the ones Steam provides on the Steam Deck
+  target, they keep working on every emulated controller.
+
 ## [0.1.0] — 2026-09-12
 
 First release. Developed and tested on one machine: an AYANEO SLIDE (board
